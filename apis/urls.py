@@ -6,5 +6,5 @@ urlpatterns = [
     url(r'^$', user.index, name='index'),
     url(r'^user$', user.user, name='user'),
     url(r'^party$', party.party, name='party'),
-    url(r'^party/(?P<party_id>\w+)$', party.join_party, name='party_join'),
+    url(r'^party/(?P<party_id>\w+)$', party.party_member, name='party_member'),
 ]

@@ -67,7 +67,7 @@ def party(request):
 
 # TODO: 모임참가 기능 추가해야댐
 @csrf_exempt
-def join_party(request, party_id):
+def party_member(request, party_id):
     if request.method == 'POST':
         uid = request.META['HTTP_ID']
 
@@ -81,4 +81,4 @@ def join_party(request, party_id):
 
     else:
         party_members = PartyMember.objects.filter(party=party_id)
-        return HttpResponse(json.dumps(serialize_query_set(party_members)), content_type='application/json')
+        return HttpResponse(json.dumps([i.serialize for i in party_members]), content_type='application/json')

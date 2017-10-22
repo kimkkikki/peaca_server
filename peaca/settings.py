@@ -77,9 +77,10 @@ WSGI_APPLICATION = 'peaca.wsgi.application'
 
 DATABASES = {
     'default': {
-         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-         'NAME': 'peaca',
-         'USER': 'peaca',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'peaca',
+        'USER': 'peaca',
+        'PASSWORD': 'Aabb112@',
     },
 }
 
