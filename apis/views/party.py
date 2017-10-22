@@ -11,7 +11,7 @@ import pytz
 def party(request):
     if request.method == 'POST':
         uid = request.META['HTTP_ID']
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode('utf-8'))
 
         user = User.objects.get(id=uid)
 

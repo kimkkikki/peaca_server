@@ -13,7 +13,7 @@ def index(request):
 @csrf_exempt
 def user(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode('utf-8'))
         id = data['id']
 
         is_exist = User.objects.filter(id=id)
