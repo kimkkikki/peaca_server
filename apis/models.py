@@ -135,6 +135,15 @@ class PartyMember(models.Model):
                 'status': self.status,
                 'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
 
+    @property
+    def expend_serialize(self):
+        return {'id': self.id,
+                'party': self.party.serialize,
+                'user': self.user.id,
+                'user_picture_url': self.user.picture_url,
+                'status': self.status,
+                'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
+
 
 class PartyMemberAdmin(admin.GeoModelAdmin):
     list_display = ['id', 'party', 'user', 'status', 'created']

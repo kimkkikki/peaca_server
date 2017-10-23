@@ -1,5 +1,5 @@
 from django.shortcuts import HttpResponse
-from ..models import User, Party, PartyMember, serialize_query_set
+from ..models import User, Party, PartyMember
 from django.contrib.gis.geos import Point
 from django.views.decorators.csrf import csrf_exempt
 import json
