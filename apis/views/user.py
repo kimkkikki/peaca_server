@@ -6,10 +6,6 @@ from datetime import datetime
 from uuid import uuid4
 
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
-
-
 @csrf_exempt
 def user(request):
     if request.method == 'POST':

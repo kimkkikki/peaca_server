@@ -39,8 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'django.contrib.sites',
-    'apis',
     'django_mobile_app_distribution',
+    'apis',
+    'web',
 ]
 
 MIDDLEWARE = [
@@ -125,13 +126,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = '/home/ubuntu/peaca_server/static'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 MEDIA_URL = '/media/'
 
-MEDIA_ROOT = '/home/ubuntu/peaca_server/media'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 import os.path
 BASE_PATH = os.path.dirname(__file__)  # `BASE_DIR` is also available.
 LOGIN_REDIRECT_URL = '/distribute/'
-SITE_ID = 2
+SITE_ID = 1
