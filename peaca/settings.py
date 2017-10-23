@@ -106,6 +106,29 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s'
+        }
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, "debug.log"),
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -135,4 +158,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 import os.path
 BASE_PATH = os.path.dirname(__file__)  # `BASE_DIR` is also available.
 LOGIN_REDIRECT_URL = '/distribute/'
-SITE_ID = 1
+SITE_ID = 2
