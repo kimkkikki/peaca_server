@@ -19,4 +19,6 @@ from django.contrib.gis import admin
 urlpatterns = [
     url(r'^apis/', include('apis.urls')),
     url(r'^admin/', admin.site.urls),
+    url(r'^distribute/', include('django_mobile_app_distribution.urls')),
+    url(r'^accounts/', include('django_mobile_app_distribution.auth_urls')),
 ]

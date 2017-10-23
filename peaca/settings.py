@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django.contrib.sites',
     'apis',
+    'django_mobile_app_distribution',
 ]
 
 MIDDLEWARE = [
@@ -124,3 +126,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATIC_ROOT = '/home/ubuntu/peaca_server/static'
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = '/home/ubuntu/peaca_server/media'
