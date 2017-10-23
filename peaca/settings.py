@@ -130,3 +130,8 @@ STATIC_ROOT = '/home/ubuntu/peaca_server/static'
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = '/home/ubuntu/peaca_server/media'
+
+import os.path
+BASE_PATH = os.path.dirname(__file__)  # `BASE_DIR` is also available.
+LOGIN_REDIRECT_URL = '/distribute/'
+SITE_ID = 2
