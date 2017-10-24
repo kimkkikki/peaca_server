@@ -15,8 +15,6 @@ def party(request):
 
         user = User.objects.get(id=uid)
 
-        print(data)
-
         party = Party()
         party.title = data['title']
         party.contents = data['contents']

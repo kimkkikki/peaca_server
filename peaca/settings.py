@@ -38,8 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
-    'django.contrib.sites',
-    'django_mobile_app_distribution',
     'apis',
     'web',
 ]
@@ -154,8 +152,3 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
-import os.path
-BASE_PATH = os.path.dirname(__file__)  # `BASE_DIR` is also available.
-LOGIN_REDIRECT_URL = '/distribute/'
-SITE_ID = 2

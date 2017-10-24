@@ -23,8 +23,6 @@ urlpatterns = [
     url(r'^', include('web.urls')),
     url(r'^apis/', include('apis.urls')),
     url(r'^admin/', admin.site.urls),
-    url(r'^distribute/', include('django_mobile_app_distribution.urls')),
-    url(r'^accounts/', include('django_mobile_app_distribution.auth_urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += staticfiles_urlpatterns()
