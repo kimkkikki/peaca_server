@@ -5,6 +5,10 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from datetime import datetime
 import pytz
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -31,11 +35,10 @@ def party(request):
 
         if 'source' in data:
             source = data['source']
-            print('source : ' + str(source))
-            party.source_id = data['source']['placeId']
-            party.source_name = data['source']['name']
-            party.source_point = Point(data['source']['coordinate']['longitude'], data['destination']['coordinate']['latitude'])
-            party.source_address = data['source']['address']
+            party.source_id = source['placeId']
+            party.source_name = source['name']
+            party.source_point = Point(source['coordinate']['longitude'], source['coordinate']['latitude'])
+            party.source_address = source['address']
 
         party.save()
 
