@@ -1,6 +1,7 @@
 from django.shortcuts import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from ..models import serialize_query_set, User, PartyMember
+from django.core.exceptions import ObjectDoesNotExist
+from ..models import User, PartyMember
 import json
 from datetime import datetime
 from uuid import uuid4
@@ -12,9 +13,12 @@ def user(request):
         data = json.loads(request.body.decode('utf-8'))
         id = data['id']
 
-        is_exist = User.objects.filter(id=id)
-
-        if len(is_exist) == 0:
+        try:
+            user = User.objects.get(id=id)
+            user.push_token = data['push_token']
+            user.save()
+            return HttpResponse(json.dumps(user.serialize), content_type='application/json')
+        except ObjectDoesNotExist:
             user = User()
             user.id = id
             user.gender = 'M' if data['gender'] == 'male' else 'W'
@@ -23,10 +27,11 @@ def user(request):
             user.picture_url = data['picture_url']
             user.birthday = datetime.strptime(data['birthday'], '%m/%d/%Y')
 
+            if 'push_token' in data:
+                user.push_token = data['push_token']
+
             user.save()
             return HttpResponse(json.dumps(user.serialize), content_type='application/json')
-        else:
-            return HttpResponse(json.dumps(serialize_query_set(is_exist)), content_type='application/json')
     else:
         try:
             uid = request.META['HTTP_ID']

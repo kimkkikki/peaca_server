@@ -2,3 +2,4 @@
 apis/__pycache__
 apis/migrations
 *.pyc
+*.log

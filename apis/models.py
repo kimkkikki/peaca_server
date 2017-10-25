@@ -25,6 +25,8 @@ class User(models.Model):
     nickname = models.CharField(max_length=20, null=True)
     birthday = models.DateField()
     gender = models.CharField(max_length=1, choices=(('M', '남자'), ('W', '여자')))
+    os = models.CharField(max_length=1, choices=(('I', 'iOS'), ('A', 'Android')), default='I')
+    push_token = models.CharField(max_length=200, null=True)
     picture_url = models.CharField(max_length=300, default="")
     created = models.DateTimeField(auto_now_add=True)
 
@@ -37,6 +39,8 @@ class User(models.Model):
                 'token': str(self.token),
                 'email': self.email,
                 'name': self.name,
+                'os': self.os,
+                'push_token': self.push_token,
                 'nickname': self.nickname,
                 'birthday': self.birthday.strftime('%Y%m%d'),
                 'gender': self.gender,
@@ -130,7 +134,7 @@ class PartyMember(models.Model):
     def serialize(self):
         return {'id': self.id,
                 'party': self.party.id,
-                'user': self.user.id,
+                'user': self.user.serialize_public,
                 'user_picture_url': self.user.picture_url,
                 'status': self.status,
                 'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
@@ -139,7 +143,7 @@ class PartyMember(models.Model):
     def expend_serialize(self):
         return {'id': self.id,
                 'party': self.party.serialize,
-                'user': self.user.id,
+                'user': self.user.serialize_public,
                 'user_picture_url': self.user.picture_url,
                 'status': self.status,
                 'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}

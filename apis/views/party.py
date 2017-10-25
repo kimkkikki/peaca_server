@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 import pytz
 import logging
+from pyfcm import FCMNotification
 
 
 logger = logging.getLogger(__name__)
@@ -83,3 +84,35 @@ def party_member(request, party_id):
     else:
         party_members = PartyMember.objects.filter(party=party_id)
         return HttpResponse(json.dumps([i.serialize for i in party_members]), content_type='application/json')
+
+
+@csrf_exempt
+def send_push_to_party_member(request, party_id):
+    if request.method == 'POST':
+        uid = request.META['HTTP_ID']
+        data = json.loads(request.body.decode('utf-8'))
+
+        tokens = []
+
+        party_members = PartyMember.objects.filter(party_id=party_id)
+        for member in party_members:
+            if member.user.push_token != None:
+                tokens.append(member.user.push_token)
+            if member.user.id == uid:
+                if member.user.nickname != None:
+                    data['sender_name'] = member.user.nickname
+                else:
+                    data['sender_name'] = member.user.name
+
+        logger.info('data : ' + json.dumps(data))
+
+        push_service = FCMNotification(api_key="AAAAo99UVFY:APA91bELR3C2GNdVF_PiuIXUKsM8S_0cgJa1PLbE1qsfuMS89gHI-pCPmE03EymlwqN7D-ewfXO76unh7tyx6mlMPzJKVDZnqfHuq6A9PdSh3oKvijDU9pQM1dfraNfDWQ3aae0SupcR")
+        message_title = data['title']
+        message_body = str(data)
+
+        result = push_service.notify_multiple_devices(registration_ids=tokens, message_title=message_title, message_body=message_body)
+        logger.info(result)
+
+        return HttpResponse(json.dumps(result), content_type='application/json')
+
+    return HttpResponse(status=404)

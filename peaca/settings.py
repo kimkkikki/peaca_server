@@ -109,24 +109,41 @@ LOGGING = {
     'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(message)s'
         }
     },
     'handlers': {
-        'file': {
-            'level': 'DEBUG',
+        'django_log_file': {
+            'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, "debug.log"),
+            'filename': os.path.join(BASE_DIR, "logs/django.log"),
+        },
+        'app_log_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': os.path.join(BASE_DIR, "logs/peaca_app.log"),
         },
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['django_log_file', 'console'],
             'level': 'INFO',
             'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['django_log_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'apis': {
+            'handlers': ['app_log_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }

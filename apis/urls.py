@@ -5,5 +5,6 @@ urlpatterns = [
     url(r'^user$', user.user, name='user'),
     url(r'^party$', party.party, name='party'),
     url(r'^party/(?P<party_id>\w+)$', party.party_member, name='party_member'),
+    url(r'^party/(?P<party_id>\w+)/push$', party.send_push_to_party_member, name='send_push_to_party_member'),
     url(r'^user/party$', user.my_party, name='my_party'),
 ]
