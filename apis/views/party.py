@@ -107,8 +107,8 @@ def send_push_to_party_member(request, party_id):
         logger.info('data : ' + json.dumps(data))
 
         push_service = FCMNotification(api_key="AAAAo99UVFY:APA91bELR3C2GNdVF_PiuIXUKsM8S_0cgJa1PLbE1qsfuMS89gHI-pCPmE03EymlwqN7D-ewfXO76unh7tyx6mlMPzJKVDZnqfHuq6A9PdSh3oKvijDU9pQM1dfraNfDWQ3aae0SupcR")
-        message_title = data['title']
-        message_body = str(data)
+        message_title = data['sender_name']
+        message_body = data['message']
 
         result = push_service.notify_multiple_devices(registration_ids=tokens, message_title=message_title, message_body=message_body)
         logger.info(result)
