@@ -73,10 +73,10 @@ def party(request):
         results = []
 
         for p in partys:
-            party_members = PartyMember.objects.filter(party=p)
+            _members_count = PartyMember.objects.filter(party=p).count()
 
             party_dict = p.serialize
-            party_dict['count'] = len(party_members)
+            party_dict['count'] = _members_count
 
             if datetime.strptime(party_dict['date'], '%Y-%m-%dT%H:%M:%S') > datetime.utcnow():
                 party_dict['status'] = 'I'
@@ -142,12 +142,13 @@ def send_push_to_party_member(request, party_id):
         party_members = PartyMember.objects.filter(party_id=party_id)
         for member in party_members:
             if member.user.push_token is not None:
-                tokens.append(member.user.push_token)
-            if member.user.id == uid:
-                if member.user.nickname is not None:
-                    data['sender_name'] = member.user.nickname
+                if member.user.id == uid:
+                    if member.user.nickname is not None:
+                        data['sender_name'] = member.user.nickname
+                    else:
+                        data['sender_name'] = member.user.name
                 else:
-                    data['sender_name'] = member.user.name
+                    tokens.append(member.user.push_token)
 
         logger.info('data : ' + json.dumps(data))
 

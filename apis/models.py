@@ -152,3 +152,29 @@ class PartyMember(models.Model):
 class PartyMemberAdmin(admin.GeoModelAdmin):
     list_display = ['id', 'party', 'user', 'status', 'created']
     list_filter = ['created']
+
+
+class PushMessage(models.Model):
+    class Meta:
+        db_table = 'push_message'
+    id = models.AutoField(primary_key=True)
+    sender = models.ForeignKey(User, related_name='sender')
+    receiver = models.ForeignKey(User, related_name='receiver', db_index=True)
+    message = models.CharField(max_length=200)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s' % self.id
+
+    @property
+    def serialize(self):
+        return {'id': self.id,
+                'sender': self.sender.id,
+                'receiver': self.receiver.id,
+                'message': self.message,
+                'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
+
+
+class PushMessageAdmin(admin.GeoModelAdmin):
+    list_display = ['id', 'sender', 'receiver', 'message', 'created']
+    list_filter = ['created']

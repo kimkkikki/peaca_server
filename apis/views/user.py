@@ -54,7 +54,19 @@ def user(request):
 def my_party(request):
     if request.method == 'GET':
         uid = request.META['HTTP_ID']
-        party_members = PartyMember.objects.filter(user=uid)
-        return HttpResponse(json.dumps([i.expend_serialize for i in party_members]), content_type='application/json')
+        party_members = PartyMember.objects.filter(user=uid).order_by('-created')
+
+        _my_list = [i.expend_serialize for i in party_members]
+
+        for _party_member in _my_list:
+            _members_count = PartyMember.objects.filter(party=_party_member['party']['id']).count()
+            _party_member['party']['count'] = _members_count
+
+            if datetime.strptime(_party_member['party']['date'], '%Y-%m-%dT%H:%M:%S') > datetime.utcnow():
+                _party_member['party']['status'] = 'I'
+            else:
+                _party_member['party']['status'] = 'E'
+
+        return HttpResponse(json.dumps(_my_list), content_type='application/json')
     else:
         return HttpResponse(status=404)
