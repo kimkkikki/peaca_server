@@ -24,7 +24,6 @@ class User(models.Model):
     name = models.CharField(max_length=20)
     nickname = models.CharField(max_length=20, null=True)
     birthday = models.DateField()
-    gender = models.CharField(max_length=1, choices=(('M', '남자'), ('W', '여자')))
     os = models.CharField(max_length=1, choices=(('I', 'iOS'), ('A', 'Android')), default='I')
     push_token = models.CharField(max_length=200, null=True)
     picture_url = models.CharField(max_length=300, default="")
@@ -43,7 +42,6 @@ class User(models.Model):
                 'push_token': self.push_token,
                 'nickname': self.nickname,
                 'birthday': self.birthday.strftime('%Y%m%d'),
-                'gender': self.gender,
                 'picture_url': self.picture_url,
                 'created': self.created.strftime('%Y%m%dT%H:%M:%S')}
 
@@ -52,13 +50,12 @@ class User(models.Model):
         return {'id': self.id,
                 'name': self.name,
                 'nickname': self.nickname,
-                'gender': self.gender,
                 'picture_url': self.picture_url,
                 'created': self.created.strftime('%Y%m%dT%H:%M:%S')}
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'email', 'name', 'nickname', 'birthday', 'gender', 'created']
+    list_display = ['id', 'email', 'name', 'nickname', 'birthday', 'created']
     list_filter = ['created']
     search_fields = ['name', 'nickname', 'email']
 
@@ -71,7 +68,6 @@ class Party(models.Model):
     contents = models.TextField()
     writer = models.ForeignKey(User, null=True)
     persons = models.IntegerField()
-    gender = models.CharField(max_length=1, choices=(('A', '상관없음'), ('M', '남자'), ('W', '여자')))
     date = models.DateTimeField(db_index=True)
     destination_id = models.CharField(max_length=100)
     destination_name = models.CharField(max_length=100, default='place_name')
@@ -94,7 +90,6 @@ class Party(models.Model):
                 'contents': self.contents,
                 'writer': self.writer.serialize_public,
                 'persons': self.persons,
-                'gender': self.gender,
                 'date': self.date.astimezone(pytz.timezone(self.timezone)).strftime('%Y-%m-%dT%H:%M:%S'),
                 'destination_id': self.destination_id,
                 'destination_name': self.destination_name,
@@ -108,8 +103,8 @@ class Party(models.Model):
 
 
 class PartyAdmin(admin.GeoModelAdmin):
-    list_display = ['id', 'title', 'gender', 'destination_id', 'destination_point', 'source_id', 'date', 'created']
-    list_filter = ['gender', 'created']
+    list_display = ['id', 'title', 'destination_id', 'destination_point', 'source_id', 'date', 'created']
+    list_filter = ['created']
     search_fields = ['title', 'contents']
 
 

@@ -21,7 +21,6 @@ def user(request):
         except ObjectDoesNotExist:
             _user = User()
             _user.id = _id
-            _user.gender = 'M' if data['gender'] == 'male' else 'W'
             _user.name = data['name']
             _user.email = data['email']
             _user.picture_url = data['picture_url']

@@ -8,6 +8,7 @@ import pytz
 import logging
 from pyfcm import FCMNotification
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.contrib.gis.db.models.functions import Distance, Value, IntegerField
 
 
 logger = logging.getLogger(__name__)
@@ -28,18 +29,17 @@ def party(request):
         _party.persons = _data['persons']
         _party.date = pytz.timezone(_data['timezone']).localize(datetime.strptime(_data['date'].split('+')[0], '%Y-%m-%dT%H:%M:%S'))
         _party.timezone = _data['timezone']
-        _party.gender = _data['gender']
 
         _party.destination_id = _data['destination']['placeId']
         _party.destination_name = _data['destination']['name']
-        _party.destination_point = Point(_data['destination']['coordinate']['longitude'], _data['destination']['coordinate']['latitude'])
+        _party.destination_point = Point(_data['destination']['coordinate']['longitude'], _data['destination']['coordinate']['latitude'], srid=4326)
         _party.destination_address = _data['destination']['address']
 
         if 'source' in _data:
             source = _data['source']
             _party.source_id = source['placeId']
             _party.source_name = source['name']
-            _party.source_point = Point(source['coordinate']['longitude'], source['coordinate']['latitude'])
+            _party.source_point = Point(source['coordinate']['longitude'], source['coordinate']['latitude'], srid=4326)
             _party.source_address = source['address']
 
         _party.save()
@@ -58,7 +58,15 @@ def party(request):
 
         _page = request.GET.get('page', 1)
 
-        partys = Party.objects.all().order_by('-created')
+        _latitude = request.GET.get('latitude', 0)
+        _longitude = request.GET.get('longitude', 0)
+
+        if _latitude != 0 and _longitude != 0:
+            _point = Point(float(_longitude), float(_latitude), srid=4326)
+            partys = Party.objects.all().order_by('-created').annotate(distance=Distance('destination_point', _point))
+        else:
+            partys = Party.objects.all().order_by('-created').annotate(distance=Value(0, IntegerField()))
+
         _paginator = Paginator(partys, 10)
 
         try:
@@ -68,14 +76,18 @@ def party(request):
         except EmptyPage:
             partys = []
 
-        print(partys)
-
         results = []
 
         for p in partys:
             _members_count = PartyMember.objects.filter(party=p).count()
 
             party_dict = p.serialize
+
+            if p.distance != 0:
+                party_dict['distance'] = p.distance.km
+            else:
+                party_dict['distance'] = p.distance
+
             party_dict['count'] = _members_count
 
             if datetime.strptime(party_dict['date'], '%Y-%m-%dT%H:%M:%S') > datetime.utcnow():
@@ -84,6 +96,8 @@ def party(request):
                 party_dict['status'] = 'E'
 
             results.append(party_dict)
+
+        logger.debug(results)
 
         return HttpResponse(json.dumps(results), content_type='application/json')
 
