@@ -2,9 +2,13 @@ from django.shortcuts import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist
 from ..models import User, PartyMember
-import json
 from datetime import datetime
 from uuid import uuid4
+import json
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -36,17 +40,23 @@ def user(request):
         try:
             uid = request.META['HTTP_ID']
             token = request.META['HTTP_TOKEN']
-        except:
+        except KeyError:
             return HttpResponse(status=400)
 
         try:
             _user = User.objects.get(id=uid, token=token)
             return HttpResponse(json.dumps(_user.serialize), content_type='application/json')
-        except:
-            _user = User.objects.get(id=uid)
-            _user.token = uuid4()
-            _user.save()
-            return HttpResponse(json.dumps(_user.serialize), content_type='application/json')
+        except ObjectDoesNotExist:
+
+            try:
+                _user = User.objects.get(id=uid)
+                _user.token = uuid4()
+                _user.save()
+                return HttpResponse(json.dumps(_user.serialize), content_type='application/json')
+
+            except ObjectDoesNotExist:
+                logger.error('bad request : %s' % str(request.META))
+                return HttpResponse(status=400)
 
 
 @csrf_exempt

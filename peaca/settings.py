@@ -20,10 +20,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '&d-lj%%xq5_v_6k8kl9^uut$6w1vg2=tu^%f)&f-!9hn95r)9n'
+with open('secret_key.txt') as f:
+    SECRET_KEY = f.read().strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -51,6 +52,25 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if not DEBUG:
+    SECURE_HSTS_SECONDS = True
+
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    SECURE_BROWSER_XSS_FILTER = True
+
+    SECURE_SSL_REDIRECT = True
+
+    SESSION_COOKIE_SECURE = True
+
+    CSRF_COOKIE_SECURE = True
+
+    X_FRAME_OPTIONS = 'DENY'
+
+    SECURE_HSTS_PRELOAD = True
 
 ROOT_URLCONF = 'peaca.urls'
 

@@ -56,18 +56,37 @@ def party(request):
     else:
         # partys = Party.objects.filter(date__gte=datetime.utcnow().replace(tzinfo=pytz.utc))
 
-        _page = request.GET.get('page', 1)
+        _party_query = Party.objects
 
         _latitude = request.GET.get('latitude', 0)
         _longitude = request.GET.get('longitude', 0)
 
         if _latitude != 0 and _longitude != 0:
             _point = Point(float(_longitude), float(_latitude), srid=4326)
-            partys = Party.objects.all().order_by('-created').annotate(distance=Distance('destination_point', _point))
+            _party_query = _party_query.annotate(distance=Distance('destination_point', _point))
         else:
-            partys = Party.objects.all().order_by('-created').annotate(distance=Value(0, IntegerField()))
+            _party_query = _party_query.annotate(distance=Value(0, IntegerField()))
 
-        _paginator = Paginator(partys, 10)
+        _order = request.GET.get('order', 0)
+
+        if _order != 0:
+            if _order == 'distance':
+                _party_query = _party_query.order_by('distance')
+            elif _order == 'time':
+                _party_query = _party_query.order_by('-created')
+        else:
+            _party_query = _party_query.order_by('-created')
+
+        _city = request.GET.get('city', 0)
+        if _city != 0:
+            _party_query = _party_query.filter(destination_address__icontains=_city)
+
+        _search_keyword = request.GET.get('keyword', 0)
+        if _search_keyword != 0:
+            _party_query = _party_query.filter(contents__icontains=_search_keyword)
+
+        _page = request.GET.get('page', 1)
+        _paginator = Paginator(_party_query, 10)
 
         try:
             partys = _paginator.page(_page)
@@ -164,15 +183,20 @@ def send_push_to_party_member(request, party_id):
                 else:
                     tokens.append(member.user.push_token)
 
-        logger.info('data : ' + json.dumps(data))
+        if len(tokens) > 0:
+            logger.info('data : ' + json.dumps(data))
 
-        push_service = FCMNotification(api_key="AAAAo99UVFY:APA91bELR3C2GNdVF_PiuIXUKsM8S_0cgJa1PLbE1qsfuMS89gHI-pCPmE03EymlwqN7D-ewfXO76unh7tyx6mlMPzJKVDZnqfHuq6A9PdSh3oKvijDU9pQM1dfraNfDWQ3aae0SupcR")
-        message_title = data['sender_name']
-        message_body = data['message']
+            push_service = FCMNotification(api_key="AAAAo99UVFY:APA91bELR3C2GNdVF_PiuIXUKsM8S_0cgJa1PLbE1qsfuMS89gHI-pCPmE03EymlwqN7D-ewfXO76unh7tyx6mlMPzJKVDZnqfHuq6A9PdSh3oKvijDU9pQM1dfraNfDWQ3aae0SupcR")
+            message_title = data['sender_name']
+            message_body = data['message']
 
-        result = push_service.notify_multiple_devices(registration_ids=tokens, message_title=message_title, message_body=message_body)
-        logger.info(result)
+            result = push_service.notify_multiple_devices(registration_ids=tokens, message_title=message_title, message_body=message_body)
+            logger.info(result)
 
-        return HttpResponse(json.dumps(result), content_type='application/json')
+            return HttpResponse(json.dumps({'status': 'success'}), content_type='application/json')
+
+        else:
+            logger.info('no have receiver : ' + json.dumps(data))
+            return HttpResponse(json.dumps({'status': 'success'}), content_type='application/json')
 
     return HttpResponse(status=404)
