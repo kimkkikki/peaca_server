@@ -24,7 +24,7 @@ with open('secret_key.txt') as f:
     SECRET_KEY = f.read().strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -51,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apis.middleware.pre_handle_request',
 ]
 
 if not DEBUG:
@@ -135,12 +136,19 @@ LOGGING = {
     'handlers': {
         'django_log_file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'when': 'D',
+            'interval': 1,
+            'backupCount': 14,
+            'formatter': 'verbose',
             'filename': os.path.join(BASE_DIR, "logs/django.log"),
         },
         'app_log_file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'when': 'D',
+            'interval': 1,
+            'backupCount': 14,
             'formatter': 'verbose',
             'filename': os.path.join(BASE_DIR, "logs/peaca_app.log"),
         },
@@ -153,17 +161,14 @@ LOGGING = {
         'django': {
             'handlers': ['django_log_file', 'console'],
             'level': 'INFO',
-            'propagate': True,
         },
         'django.request': {
             'handlers': ['django_log_file', 'console'],
             'level': 'ERROR',
-            'propagate': False,
         },
         'apis': {
             'handlers': ['app_log_file', 'console'],
             'level': 'INFO',
-            'propagate': False,
         },
     },
 }

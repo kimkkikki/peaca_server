@@ -36,6 +36,22 @@ def user(request):
             _user.save()
 
             return HttpResponse(json.dumps(_user.serialize), content_type='application/json')
+
+    elif request.method == 'PUT':
+        _data = json.loads(request.body.decode('utf-8'))
+        _id = _data['id']
+        _secret = _data['secret']
+
+        try:
+            _user = User.objects.get(id=_id, secret=_secret)
+            _user.token = uuid4()
+            _user.save()
+
+            return HttpResponse(json.dumps(_user.serialize), content_type='application/json')
+
+        except ObjectDoesNotExist:
+            return HttpResponse(status=401)
+
     else:
         try:
             uid = request.META['HTTP_ID']
@@ -62,8 +78,8 @@ def user(request):
 @csrf_exempt
 def my_party(request):
     if request.method == 'GET':
-        uid = request.META['HTTP_ID']
-        party_members = PartyMember.objects.filter(user=uid).order_by('-created')
+        _user = request.user
+        party_members = PartyMember.objects.filter(user=_user).order_by('-created')
 
         _my_list = [i.expend_serialize for i in party_members]
 

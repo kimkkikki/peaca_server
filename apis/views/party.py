@@ -1,5 +1,5 @@
 from django.shortcuts import HttpResponse
-from ..models import User, Party, PartyMember
+from ..models import Party, PartyMember, PushMessage
 from django.contrib.gis.geos import Point
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -17,10 +17,9 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 def party(request):
     if request.method == 'POST':
-        _uid = request.META['HTTP_ID']
         _data = json.loads(request.body.decode('utf-8'))
 
-        _user = User.objects.get(id=_uid)
+        _user = request.user
 
         _party = Party()
         _party.title = _data['title']
@@ -125,13 +124,13 @@ def party(request):
 @csrf_exempt
 def party_member(request, party_id):
     if request.method == 'POST':
-        uid = request.META['HTTP_ID']
+        _user = request.user
 
         _already_joined_party_members = PartyMember.objects.filter(party_id=party_id)
         logger.info(_already_joined_party_members)
 
         for _joined_member in _already_joined_party_members:
-            if _joined_member.user_id == uid:
+            if _joined_member.user_id == _user.id:
                 logger.info('already joined')
 
                 _result = _joined_member.serialize
@@ -145,7 +144,7 @@ def party_member(request, party_id):
 
         if _joined_count < _party_count:
             _party_member = PartyMember()
-            _party_member.user = User.objects.get(id=uid)
+            _party_member.user = _user
             _party_member.party = Party.objects.get(id=party_id)
             _party_member.status = 'member'
             _party_member.save()
@@ -167,36 +166,60 @@ def party_member(request, party_id):
 @csrf_exempt
 def send_push_to_party_member(request, party_id):
     if request.method == 'POST':
-        uid = request.META['HTTP_ID']
+        _user = request.user
         data = json.loads(request.body.decode('utf-8'))
 
-        tokens = []
+        _tokens = []
+        _members = []
+        _sender = None
 
         party_members = PartyMember.objects.filter(party_id=party_id)
         for member in party_members:
             if member.user.push_token is not None:
-                if member.user.id == uid:
-                    if member.user.nickname is not None:
-                        data['sender_name'] = member.user.nickname
+                if member.user.id == _user.id:
+                    _sender = member.user
+                    if _sender.nickname is not None:
+                        data['sender_name'] = _sender.nickname
                     else:
-                        data['sender_name'] = member.user.name
+                        data['sender_name'] = _sender.name
                 else:
-                    tokens.append(member.user.push_token)
+                    _tokens.append(member.user.push_token)
+                    _members.append(member.user)
 
-        if len(tokens) > 0:
+        if len(_tokens) > 0:
             logger.info('data : ' + json.dumps(data))
 
             push_service = FCMNotification(api_key="AAAAo99UVFY:APA91bELR3C2GNdVF_PiuIXUKsM8S_0cgJa1PLbE1qsfuMS89gHI-pCPmE03EymlwqN7D-ewfXO76unh7tyx6mlMPzJKVDZnqfHuq6A9PdSh3oKvijDU9pQM1dfraNfDWQ3aae0SupcR")
             message_title = data['sender_name']
             message_body = data['message']
 
-            result = push_service.notify_multiple_devices(registration_ids=tokens, message_title=message_title, message_body=message_body)
+            result = push_service.notify_multiple_devices(registration_ids=_tokens, message_title=message_title, message_body=message_body)
             logger.info(result)
+
+            for _member in _members:
+                _push_message = PushMessage()
+                _push_message.sender = _sender
+                _push_message.receiver = _member
+                _push_message.message = message_body
+                _push_message.save()
 
             return HttpResponse(json.dumps({'status': 'success'}), content_type='application/json')
 
         else:
             logger.info('no have receiver : ' + json.dumps(data))
             return HttpResponse(json.dumps({'status': 'success'}), content_type='application/json')
+
+    elif request.method == 'DELETE':
+        _user = request.user
+        _push_messages = PushMessage.objects.filter(receiver=_user)
+        _push_messages.delete()
+
+        return HttpResponse(json.dumps({'status': 'success'}), content_type='application/json')
+
+    elif request.method == 'GET':
+        _user = request.user
+        _message_count = PushMessage.objects.filter(receiver=_user).count()
+
+        return HttpResponse(json.dumps({'count': _message_count}), content_type='application/json')
 
     return HttpResponse(status=404)

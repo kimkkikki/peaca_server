@@ -19,7 +19,8 @@ class User(models.Model):
     class Meta:
         db_table = 'user'
     id = models.CharField(primary_key=True, max_length=30)
-    token = models.UUIDField(default=uuid4)
+    token = models.UUIDField(default=uuid4, unique=True)
+    secret = models.UUIDField(default=uuid4, editable=False, unique=True)
     email = models.CharField(max_length=50)
     name = models.CharField(max_length=20)
     nickname = models.CharField(max_length=20, null=True)
@@ -36,6 +37,7 @@ class User(models.Model):
     def serialize(self):
         return {'id': self.id,
                 'token': str(self.token),
+                'secret': str(self.secret),
                 'email': self.email,
                 'name': self.name,
                 'os': self.os,
