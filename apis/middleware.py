@@ -1,7 +1,7 @@
 from django.shortcuts import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 import logging
-# import re
+import re
 from .models import User
 
 
@@ -12,29 +12,37 @@ def pre_handle_request(get_response):
     # One-time configuration and initialization.
 
     def middleware(request):
+        _need_check_token = [
+            '/apis/party',
+            '/apis/party/(\d+)',
+            '/apis/party/(\d+)/push',
+            '/apis/user/party',
+        ]
+
         _meta = request.META
         _path = _meta['PATH_INFO']
 
-        if 'apis'   in _path:
-            _dont_check_token = [
-                '/apis/user',
-            ]
+        match = False
+        for _regex in _need_check_token:
+            if re.search(_regex, _path):
+                match = True
+                break
 
-            if _path not in _dont_check_token:
+        if match:
+            try:
+                _uid = _meta['HTTP_ID']
+                _token = _meta['HTTP_TOKEN']
+
                 try:
-                    _uid = _meta['HTTP_ID']
-                    _token = _meta['HTTP_TOKEN']
-
-                    try:
-                        _user = User.objects.get(id=_uid, token=_token)
-                        request.user = _user
-                    except ObjectDoesNotExist:
-                        return HttpResponse(status=401)
-                    except ValidationError:
-                        return HttpResponse(status=401)
-
-                except KeyError:
+                    _user = User.objects.get(id=_uid, token=_token)
+                    request.user = _user
+                except ObjectDoesNotExist:
                     return HttpResponse(status=401)
+                except ValidationError:
+                    return HttpResponse(status=401)
+
+            except KeyError:
+                return HttpResponse(status=401)
 
         response = get_response(request)
 
