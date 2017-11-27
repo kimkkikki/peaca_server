@@ -13,10 +13,10 @@ def pre_handle_request(get_response):
 
     def middleware(request):
         _need_check_token = [
-            '/apis/party',
-            '/apis/party/(\d+)',
-            '/apis/party/(\d+)/push',
-            '/apis/user/party',
+            '^/apis/party$',
+            '^/apis/party/(\d+)$',
+            '^/apis/party/(\d+)/push$',
+            '^/apis/user/party$',
         ]
 
         _meta = request.META

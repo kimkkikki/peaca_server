@@ -2,3 +2,4 @@ django
 psycopg2
 pyfcm
 pytz
+django-map-widgets

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'mapwidgets',
     'apis',
     'web',
 ]
@@ -197,3 +198,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+MAP_WIDGETS = {
+    'GOOGLE_MAP_API_KEY': 'AIzaSyB3fOxMsaexXMRCkw7gItbC61PV_o45w4c'
+}

@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
 from django.contrib.gis import admin
+from mapwidgets.widgets import GooglePointFieldWidget
 from uuid import uuid4
 from datetime import datetime
 import pytz
@@ -104,7 +105,10 @@ class Party(models.Model):
                 'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
 
 
-class PartyAdmin(admin.GeoModelAdmin):
+class PartyAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.PointField: {"widget": GooglePointFieldWidget}
+    }
     list_display = ['id', 'title', 'destination_id', 'destination_point', 'source_id', 'date', 'created']
     list_filter = ['created']
     search_fields = ['title', 'contents']

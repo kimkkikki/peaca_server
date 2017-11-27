@@ -3,3 +3,5 @@ apis/__pycache__
 apis/migrations
 *.pyc
 *.log
+logs
+static
