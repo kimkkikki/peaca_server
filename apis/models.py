@@ -4,6 +4,7 @@ from mapwidgets.widgets import GooglePointFieldWidget
 from uuid import uuid4
 from datetime import datetime
 import pytz
+from django.conf import settings
 
 
 def serialize_query_set(queryset):
@@ -63,6 +64,69 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ['name', 'nickname', 'email']
 
 
+class Place(models.Model):
+    class Meta:
+        db_table = 'place'
+    id = models.CharField(max_length=100, primary_key=True)
+    name = models.CharField(max_length=200)
+    point = models.PointField(db_index=True)
+    utc_offset = models.IntegerField(default=0)
+    address = models.CharField(max_length=200, default='')
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s' % self.name
+
+    @property
+    def serialize(self):
+        return {'id': self.id,
+                'name': self.name,
+                'point': '%f,%f' % (self.point.x, self.point.y) if self.point is not None else None,
+                'utc_offset': self.utc_offset,
+                'address': self.address,
+                'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
+
+
+class PlaceAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.PointField: {"widget": GooglePointFieldWidget}
+    }
+    list_display = ['id', 'name', 'point', 'created']
+    list_filter = ['created']
+
+
+def place_photo_directory_path(instance, filename):
+    return 'place/{0}/{1}'.format(instance.place.id, filename)
+
+
+class PlacePhoto(models.Model):
+    class Meta:
+        db_table = 'place_photo'
+    id = models.CharField(max_length=200, primary_key=True)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=place_photo_directory_path)
+    attribution = models.CharField(max_length=100, null=True, blank=True)
+    attribution_url = models.CharField(max_length=200, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s' % self.id
+
+    @property
+    def serialize(self):
+        return {'id': self.id,
+                'place': self.place.id,
+                'attribution': self.attribution,
+                'attribution_url': self.attribution_url,
+                'image': settings.MEDIA_URL + str(self.image),
+                'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
+
+
+class PlacePhotoAdmin(admin.ModelAdmin):
+    list_display = ['place', 'image', 'created']
+    list_filter = ['created']
+
+
 class Party(models.Model):
     class Meta:
         db_table = 'party'
@@ -72,15 +136,10 @@ class Party(models.Model):
     writer = models.ForeignKey(User, null=True)
     persons = models.IntegerField()
     date = models.DateTimeField(db_index=True)
-    destination_id = models.CharField(max_length=100)
-    destination_name = models.CharField(max_length=100, default='place_name')
-    destination_point = models.PointField(db_index=True)
-    destination_address = models.CharField(max_length=100, null=True, blank=True)
+    destination = models.ForeignKey(Place, related_name='destination')
+    photo = models.ForeignKey(PlacePhoto, null=True)
     timezone = models.CharField(max_length=30, default='Asia/Seoul')
-    source_id = models.CharField(max_length=100, null=True, blank=True)
-    source_name = models.CharField(max_length=100, default='place_name')
-    source_point = models.PointField(db_index=True, null=True, blank=True)
-    source_address = models.CharField(max_length=100, null=True, blank=True)
+    source = models.ForeignKey(Place, related_name='source', null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -94,14 +153,9 @@ class Party(models.Model):
                 'writer': self.writer.serialize_public,
                 'persons': self.persons,
                 'date': self.date.astimezone(pytz.timezone(self.timezone)).strftime('%Y-%m-%dT%H:%M:%S'),
-                'destination_id': self.destination_id,
-                'destination_name': self.destination_name,
-                'destination_point': '%f,%f' % (self.destination_point.x, self.destination_point.y),
-                'destination_address': self.destination_address,
-                'source_id': self.source_id,
-                'source_point': '%f,%f' % (self.source_point.x, self.source_point.y) if self.source_point is not None else None,
-                'source_name': self.source_name,
-                'source_address': self.source_address,
+                'destination': self.destination.serialize,
+                'photo': self.photo.serialize if self.photo is not None else None,
+                'source': self.source.serialize if self.source is not None else None,
                 'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
 
 
@@ -109,17 +163,9 @@ class PartyAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.PointField: {"widget": GooglePointFieldWidget}
     }
-    list_display = ['id', 'title', 'destination_id', 'destination_point', 'source_id', 'date', 'created']
+    list_display = ['id', 'title', 'destination', 'source', 'date', 'created']
     list_filter = ['created']
     search_fields = ['title', 'contents']
-
-
-class PartyPoint(models.Model):
-    class Meta:
-        db_table = 'party_point'
-    id = models.CharField(max_length=50, primary_key=True)
-    name = models.CharField(max_length=100)
-    point = models.PointField(db_index=True)
 
 
 class PartyMember(models.Model):
@@ -150,7 +196,7 @@ class PartyMember(models.Model):
                 'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
 
 
-class PartyMemberAdmin(admin.GeoModelAdmin):
+class PartyMemberAdmin(admin.ModelAdmin):
     list_display = ['id', 'party', 'user', 'status', 'created']
     list_filter = ['created']
 
@@ -176,6 +222,6 @@ class PushMessage(models.Model):
                 'created': (datetime.now() if self.created is None else self.created).strftime('%Y-%m-%dT%H:%M:%S%z')}
 
 
-class PushMessageAdmin(admin.GeoModelAdmin):
+class PushMessageAdmin(admin.ModelAdmin):
     list_display = ['id', 'sender', 'receiver', 'message', 'created']
     list_filter = ['created']

@@ -30,16 +30,12 @@ def party(request):
         _party.timezone = _data['timezone']
 
         _party.destination_id = _data['destination']['placeId']
-        _party.destination_name = _data['destination']['name']
-        _party.destination_point = Point(_data['destination']['coordinate']['longitude'], _data['destination']['coordinate']['latitude'], srid=4326)
-        _party.destination_address = _data['destination']['address']
 
         if 'source' in _data:
-            source = _data['source']
-            _party.source_id = source['placeId']
-            _party.source_name = source['name']
-            _party.source_point = Point(source['coordinate']['longitude'], source['coordinate']['latitude'], srid=4326)
-            _party.source_address = source['address']
+            _party.source_id = _data['source']['placeId']
+
+        if 'photo' in _data:
+            _party.photo_id = _data['photo']
 
         _party.save()
 
@@ -62,7 +58,7 @@ def party(request):
 
         if _latitude != 0 and _longitude != 0:
             _point = Point(float(_longitude), float(_latitude), srid=4326)
-            _party_query = _party_query.annotate(distance=Distance('destination_point', _point))
+            _party_query = _party_query.annotate(distance=Distance('destination__point', _point))
         else:
             _party_query = _party_query.annotate(distance=Value(0, IntegerField()))
 
