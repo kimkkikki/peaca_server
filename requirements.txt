@@ -4,3 +4,4 @@ pyfcm
 pytz
 django-map-widgets
 requests
+django-bower

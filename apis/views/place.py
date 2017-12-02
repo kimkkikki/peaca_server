@@ -9,6 +9,7 @@ from mimetypes import guess_extension
 import asyncio
 import logging
 from requests import Response
+from requests.adapters import SSLError
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,11 @@ async def get_photo(photo, loop) -> (str, Response):
                      'photoreference': photo['photo_reference']}
 
     def do_req():
-        return requests.get(url='https://maps.googleapis.com/maps/api/place/photo', params=_photo_params)
+        try:
+            return requests.get(url='https://maps.googleapis.com/maps/api/place/photo', params=_photo_params)
+        except SSLError:
+            logger.exception('SSL Error')
+
     _photo_response = await loop.run_in_executor(None, do_req)
 
     _attributions = photo['html_attributions']

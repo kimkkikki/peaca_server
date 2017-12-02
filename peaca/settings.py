@@ -40,9 +40,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'mapwidgets',
+    'djangobower',
     'apis',
     'web',
 ]
+
+BOWER_INSTALLED_APPS = (
+    'jquery',
+    'bootstrap#v4.0.0-alpha.6',
+)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -53,6 +59,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apis.middleware.pre_handle_request',
+]
+
+STATICFILES_FINDERS = [
+    'djangobower.finders.BowerFinder',
 ]
 
 if not DEBUG:
@@ -198,6 +208,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+BOWER_COMPONENTS_ROOT = os.path.join(BASE_DIR, "components")
 
 MAP_WIDGETS = {
     'GOOGLE_MAP_API_KEY': 'AIzaSyB3fOxMsaexXMRCkw7gItbC61PV_o45w4c'

@@ -6,3 +6,4 @@ apis/migrations
 logs
 static
 media
+components/bower_components
