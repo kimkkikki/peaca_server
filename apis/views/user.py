@@ -19,23 +19,30 @@ def user(request):
 
         try:
             _user = User.objects.get(id=_id)
-            _user.push_token = data['push_token']
-            _user.save()
-            return HttpResponse(json.dumps(_user.serialize), content_type='application/json')
+
         except ObjectDoesNotExist:
             _user = User()
             _user.id = _id
             _user.name = data['name']
             _user.email = data['email']
-            _user.picture_url = data['picture_url']
-            _user.birthday = datetime.strptime(data['birthday'], '%m/%d/%Y')
 
-            if 'push_token' in data:
-                _user.push_token = data['push_token']
+        _user.picture_url = data['picture_url']
 
-            _user.save()
+        if 'photos' in data:
+            _photos = []
+            for photo in data['photos']:
+                _photos.append(photo['source'])
 
-            return HttpResponse(json.dumps(_user.serialize), content_type='application/json')
+            _user.photos = _photos
+
+        if 'push_token' in data:
+            _user.push_token = data['push_token']
+
+        _user.birthday = datetime.strptime(data['birthday'], '%m/%d/%Y')
+
+        _user.save()
+
+        return HttpResponse(json.dumps(_user.serialize), content_type='application/json')
 
     elif request.method == 'PUT':
         _data = json.loads(request.body.decode('utf-8'))

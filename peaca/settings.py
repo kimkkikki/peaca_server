@@ -28,7 +28,6 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -39,16 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'apis.apps.ApisConfig',
+    'web.apps.WebConfig',
     'mapwidgets',
     'djangobower',
-    'apis',
-    'web',
 ]
 
-BOWER_INSTALLED_APPS = (
+BOWER_INSTALLED_APPS = [
     'jquery',
+    'popper.js',
     'bootstrap#v4.0.0-alpha.6',
-)
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -62,6 +62,8 @@ MIDDLEWARE = [
 ]
 
 STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'djangobower.finders.BowerFinder',
 ]
 
@@ -146,20 +148,20 @@ LOGGING = {
     },
     'handlers': {
         'django_log_file': {
-            'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'D',
             'interval': 1,
             'backupCount': 14,
+            'encoding': 'utf-8',
             'formatter': 'verbose',
             'filename': os.path.join(BASE_DIR, "logs/django.log"),
         },
         'app_log_file': {
-            'level': 'INFO',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'D',
             'interval': 1,
             'backupCount': 14,
+            'encoding': 'utf-8',
             'formatter': 'verbose',
             'filename': os.path.join(BASE_DIR, "logs/peaca_app.log"),
         },
@@ -175,7 +177,7 @@ LOGGING = {
         },
         'django.request': {
             'handlers': ['django_log_file', 'console'],
-            'level': 'ERROR',
+            'level': 'INFO',
         },
         'apis': {
             'handlers': ['app_log_file', 'console'],
@@ -187,7 +189,7 @@ LOGGING = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-us.UTF-8'
 
 TIME_ZONE = 'UTC'
 

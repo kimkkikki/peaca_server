@@ -15,7 +15,7 @@ from requests.adapters import SSLError
 logger = logging.getLogger(__name__)
 
 
-async def get_photo(photo, loop) -> (str, Response):
+async def get_photo(photo, loop) -> (PlacePhoto, Response):
     _photo_params = {'key': 'AIzaSyB3fOxMsaexXMRCkw7gItbC61PV_o45w4c',
                      'maxheight': 400,
                      'photoreference': photo['photo_reference']}

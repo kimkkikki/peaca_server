@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
 from django.contrib.gis import admin
+from django.contrib.postgres.fields import ArrayField
 from mapwidgets.widgets import GooglePointFieldWidget
 from uuid import uuid4
 from datetime import datetime
@@ -30,7 +31,9 @@ class User(models.Model):
     os = models.CharField(max_length=1, choices=(('I', 'iOS'), ('A', 'Android')), default='I')
     push_token = models.CharField(max_length=200, null=True)
     picture_url = models.CharField(max_length=300, default="")
+    photos = ArrayField(models.CharField(max_length=300), blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return '%s' % self.id
@@ -44,6 +47,7 @@ class User(models.Model):
                 'name': self.name,
                 'os': self.os,
                 'push_token': self.push_token,
+                'photos': self.photos,
                 'nickname': self.nickname,
                 'birthday': self.birthday.strftime('%Y%m%d'),
                 'picture_url': self.picture_url,
@@ -55,12 +59,13 @@ class User(models.Model):
                 'name': self.name,
                 'nickname': self.nickname,
                 'picture_url': self.picture_url,
+                'photos': self.photos,
                 'created': self.created.strftime('%Y%m%dT%H:%M:%S')}
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'email', 'name', 'nickname', 'birthday', 'created']
-    list_filter = ['created']
+    list_display = ['id', 'email', 'name', 'nickname', 'birthday', 'created', 'updated']
+    list_filter = ['created', 'updated']
     search_fields = ['name', 'nickname', 'email']
 
 
@@ -133,13 +138,13 @@ class Party(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=50)
     contents = models.TextField()
-    writer = models.ForeignKey(User, null=True)
+    writer = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     persons = models.IntegerField()
     date = models.DateTimeField(db_index=True)
-    destination = models.ForeignKey(Place, related_name='destination')
-    photo = models.ForeignKey(PlacePhoto, null=True)
+    destination = models.ForeignKey(Place, related_name='destination', on_delete=models.CASCADE)
+    photo = models.ForeignKey(PlacePhoto, null=True, on_delete=models.SET_NULL)
     timezone = models.CharField(max_length=30, default='Asia/Seoul')
-    source = models.ForeignKey(Place, related_name='source', null=True, blank=True)
+    source = models.ForeignKey(Place, related_name='source', null=True, blank=True, on_delete=models.SET_NULL)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -172,8 +177,8 @@ class PartyMember(models.Model):
     class Meta:
         db_table = 'party_member'
     id = models.AutoField(primary_key=True)
-    party = models.ForeignKey(Party, db_index=True)
-    user = models.ForeignKey(User)
+    party = models.ForeignKey(Party, db_index=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=6, choices=(('master', '방장'), ('member', '멤버'), ('ban', '강퇴'), ('exit', '나감')))
     created = models.DateTimeField(auto_now_add=True)
 
@@ -205,8 +210,8 @@ class PushMessage(models.Model):
     class Meta:
         db_table = 'push_message'
     id = models.AutoField(primary_key=True)
-    sender = models.ForeignKey(User, related_name='sender')
-    receiver = models.ForeignKey(User, related_name='receiver', db_index=True)
+    sender = models.ForeignKey(User, related_name='sender', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(User, related_name='receiver', db_index=True, on_delete=models.CASCADE)
     message = models.CharField(max_length=200)
     created = models.DateTimeField(auto_now_add=True)
 

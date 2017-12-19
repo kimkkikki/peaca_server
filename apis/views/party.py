@@ -1,4 +1,4 @@
-from django.shortcuts import HttpResponse
+from django.shortcuts import HttpResponse, get_object_or_404
 from ..models import Party, PartyMember, PushMessage
 from django.contrib.gis.geos import Point
 from django.views.decorators.csrf import csrf_exempt
@@ -116,13 +116,14 @@ def party(request):
         return HttpResponse(json.dumps(results), content_type='application/json')
 
 
-# TODO: 모임참가 기능 추가해야댐
 @csrf_exempt
 def party_member(request, party_id):
+    _party = get_object_or_404(Party, pk=party_id)
+
     if request.method == 'POST':
         _user = request.user
 
-        _already_joined_party_members = PartyMember.objects.filter(party_id=party_id)
+        _already_joined_party_members = PartyMember.objects.filter(party=_party)
         logger.info(_already_joined_party_members)
 
         for _joined_member in _already_joined_party_members:
@@ -133,15 +134,13 @@ def party_member(request, party_id):
                 _result['success'] = True
                 return HttpResponse(json.dumps(_result), content_type='application/json')
 
-        _party = Party.objects.get(id=party_id)
-
         _joined_count = len(_already_joined_party_members)
         _party_count = _party.persons
 
         if _joined_count < _party_count:
             _party_member = PartyMember()
             _party_member.user = _user
-            _party_member.party = Party.objects.get(id=party_id)
+            _party_member.party = _party
             _party_member.status = 'member'
             _party_member.save()
 
@@ -154,6 +153,10 @@ def party_member(request, party_id):
             _result = {'success': False}
             return HttpResponse(json.dumps(_result), content_type='application/json')
 
+    # TODO: 모임 탈퇴 기능 추가해야댐
+    elif request.method == 'DELETE':
+        return HttpResponse(status=200, content_type='application/json')
+
     else:
         party_members = PartyMember.objects.filter(party=party_id)
         return HttpResponse(json.dumps([i.serialize for i in party_members]), content_type='application/json')
@@ -161,6 +164,8 @@ def party_member(request, party_id):
 
 @csrf_exempt
 def send_push_to_party_member(request, party_id):
+    _party = get_object_or_404(Party, pk=party_id)
+
     if request.method == 'POST':
         _user = request.user
         data = json.loads(request.body.decode('utf-8'))
@@ -169,7 +174,7 @@ def send_push_to_party_member(request, party_id):
         _members = []
         _sender = None
 
-        party_members = PartyMember.objects.filter(party_id=party_id)
+        party_members = PartyMember.objects.filter(party=_party)
         for member in party_members:
             if member.user.push_token is not None:
                 if member.user.id == _user.id:
